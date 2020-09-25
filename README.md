@@ -663,6 +663,30 @@ python run_squad.py \
   --null_score_diff_threshold=$THRESH
 ```
 
+###Export trained checkpoint to SavedModel for serving
+
+To export your checkpoint file to a SavedModel, use the following:
+
+```shell script
+python ./run_squad.py \
+    --vocab_file=$BERT_LARGE_DIR/vocab.txt \
+    --bert_config_file=./uncased_L-24_H-1024_A-16/bert_config.json \
+    --init_checkpoint=<path/to/your/model.ckpt-xxxx> \
+    --do_train=False \
+    --train_file=./train-v2.0.json \
+    --do_predict=True \
+    --predict_file=$SQUAD_DIR/dev-v2.0.json \
+    --train_batch_size=24 \
+    --learning_rate=3e-5 \
+    --num_train_epochs=2.0 \
+    --max_seq_length=384 \
+    --doc_stride=128 \
+    --version_2_with_negative=True \
+    --output_dir=<path/to/your/output/dir> \
+    --do_export=True \
+    --export_dir=<path/where/to/export/savedmodel>
+```
+
 ### Out-of-memory issues
 
 All experiments in the paper were fine-tuned on a Cloud TPU, which has 64GB of

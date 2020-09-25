@@ -28,6 +28,7 @@ import optimization
 import tokenization
 import six
 import tensorflow.compat.v1 as tf
+import numpy as np
 
 flags = tf.flags
 
@@ -153,6 +154,13 @@ flags.DEFINE_float(
     "null_score_diff_threshold", 0.0,
     "If null_score - best_non_null is greater than the threshold predict null.")
 
+flags.DEFINE_string(
+    "export_dir", None,
+    "path to save the SavedModel.")
+
+flags.DEFINE_bool(
+    "do_export", False,
+    "Whether to export to SavedModel.")
 
 class SquadExample(object):
   """A single training/test example for simple sequence classification.
@@ -1274,6 +1282,25 @@ def main(_):
                       FLAGS.n_best_size, FLAGS.max_answer_length,
                       FLAGS.do_lower_case, output_prediction_file,
                       output_nbest_file, output_null_log_odds_file)
+    
+  if FLAGS.do_export:
+    estimator._export_to_tpu = False
+    checkpoint_path = tf.train.latest_checkpoint(FLAGS.output_dir)
+    estimator.export_saved_model(FLAGS.export_dir, serving_input_fn, checkpoint_path=checkpoint_path)
+
+
+def serving_input_fn():
+    unique_ids = tf.placeholder(tf.int32, [None], name='unique_ids')
+    input_ids = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_ids')
+    input_mask = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_mask')
+    input_type_ids = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_type_ids')
+    input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn({
+        'unique_ids': unique_ids,
+        'input_ids': input_ids,
+        'input_mask': input_mask,
+        'segment_ids': input_type_ids,
+    })()
+    return input_fn
 
 
 if __name__ == "__main__":
