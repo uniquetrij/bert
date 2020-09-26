@@ -665,6 +665,7 @@ python run_squad.py \
 
 ###Export trained checkpoint to SavedModel for serving
 
+The code for exporting has been adopted from [bigboNed3's](https://github.com/bigboNed3) [bert_serving](https://github.com/bigboNed3/bert_serving) repository.
 To export your checkpoint file to a SavedModel, use the following:
 
 ```shell script

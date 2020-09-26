@@ -677,7 +677,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
           scaffold_fn=scaffold_fn)
     elif mode == tf.estimator.ModeKeys.PREDICT:
       predictions = {
-          "unique_ids": unique_ids,
+          "label_ids": tf.identity(unique_ids),
           "start_logits": start_logits,
           "end_logits": end_logits,
       }
@@ -1265,7 +1265,7 @@ def main(_):
         predict_input_fn, yield_single_examples=True):
       if len(all_results) % 1000 == 0:
         tf.logging.info("Processing example: %d" % (len(all_results)))
-      unique_id = int(result["unique_ids"])
+      unique_id = int(result["label_ids"])
       start_logits = [float(x) for x in result["start_logits"].flat]
       end_logits = [float(x) for x in result["end_logits"].flat]
       all_results.append(
@@ -1290,17 +1290,17 @@ def main(_):
 
 
 def serving_input_fn():
-    unique_ids = tf.placeholder(tf.int32, [None], name='unique_ids')
-    input_ids = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_ids')
-    input_mask = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_mask')
-    input_type_ids = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_type_ids')
-    input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn({
-        'unique_ids': unique_ids,
-        'input_ids': input_ids,
-        'input_mask': input_mask,
-        'segment_ids': input_type_ids,
-    })()
-    return input_fn
+  unique_ids = tf.placeholder(tf.int64, [None], name='unique_ids')
+  input_ids = tf.placeholder(tf.int64, [None, FLAGS.max_seq_length], name='input_ids')
+  input_mask = tf.placeholder(tf.int64, [None, FLAGS.max_seq_length], name='input_mask')
+  segment_ids = tf.placeholder(tf.int64, [None, FLAGS.max_seq_length], name='segment_ids')
+  input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn({
+    'unique_ids': unique_ids,
+    'input_ids': input_ids,
+    'input_mask': input_mask,
+    'segment_ids': segment_ids
+  })()
+  return input_fn
 
 
 if __name__ == "__main__":
